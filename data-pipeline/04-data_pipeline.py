@@ -3,6 +3,7 @@
 # !pip install fastparquet
 # You may need a VPN to connect to Yahoo Finance
 
+import os
 import glob
 import pickle
 import datetime
@@ -110,14 +111,14 @@ def process_filing_data(start_day: str, end_day: str, kq_path: str, filing_data:
     return nested_10q,nested_10k
     
 if __name__ == '__main__':
-    base_path = '/home/yyu/YJ'
-    price_path = '/home/yyu/YJ/price/'
-    news_path = '/home/yyu/YJ/add_summary_data/'
-    kq_path = '/home/yyu/YJ/10k10q/'
-    filing_data = '/home/yyu/YJ/filing_data.parquet'
-    start_day = '2021-08-01'
-    end_day = '2023-06-01'
-    tickers = ['BAC', 'DIS', 'GM', 'MRNA', 'NVDA', 'PFE']
+    base_path = '/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/'
+    price_path = os.path.join(base_path, 'output/')
+    news_path = os.path.join(base_path, 'output/')
+    kq_path = os.path.join(base_path, 'output/')
+    filing_data = os.path.join(base_path, 'output/filing_data.parquet')
+    start_day = '2021-08-17'
+    end_day = '2023-04-10'
+    tickers = ['TSLA']
     csv_files_pattern = '*.csv'
     col_name = 'summary'
 
