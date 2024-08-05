@@ -6,7 +6,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import torch
 import pandas as pd
 import numpy as np
-
+import os
 
 def subset_symbol_dict(input_dir, cur_symbol):
     new_dict = {}
@@ -25,8 +25,8 @@ def subset_symbol_dict(input_dir, cur_symbol):
     for k, v in tqdm(data.items()):
         cur_price = v[0]['price']  # price
         cur_news = v[1]['news']   # news
-        cur_filing_q = v[2]['filling_q']  # form q
-        cur_filing_k = v[3]['filling_k']  # form k
+        cur_filing_q = v[2]['filing_q']  # form q
+        cur_filing_k = v[3]['filing_k']  # form k
         # print('Date: ---------', k)
         # print('Available tickers: ---------',cur_news.keys())
 
@@ -57,15 +57,15 @@ def subset_symbol_dict(input_dir, cur_symbol):
     return new_dict, ticker_dict_byDate
 
 #### finBERT
-# Load the tokenizer and model
-tokenizer = BertTokenizer.from_pretrained('yiyanghkust/finbert-tone')
-model = BertForSequenceClassification.from_pretrained('yiyanghkust/finbert-tone')
-
 # Function to analyze sentiment
 def sentiment_score(text):
-    inputs = tokenizer(text, return_tensors="pt", max_length=512, truncation=True)
-    outputs = model(**inputs)
-    scores = torch.nn.functional.softmax(outputs.logits, dim=-1)
+    try:
+        inputs = tokenizer(text, return_tensors="pt", max_length=512, truncation=True)
+        outputs = model(**inputs)
+        scores = torch.nn.functional.softmax(outputs.logits, dim=-1)
+    except:
+        print('Error in sentiment_score Text: ', text)
+        return [0, 1, 0]
     return scores.tolist()[0]
 
 def assign_finBERT_scores(new_dict, cur_symbol):
@@ -126,25 +126,33 @@ def assign_vader_scores(new_dict, cur_symbol):
 
 
 
-def export_sub_symbol(cur_symbol_lst, senti_model_type):
+def export_sub_symbol(cur_symbol_lst, senti_model_type, output_dir):
     print('Ticker list: ------', cur_symbol_lst)
     for cur_symbol_0 in cur_symbol_lst:
         new_dict, ticker_dict_byDate = subset_symbol_dict(input_dir, cur_symbol_0)
         
         if senti_model_type == 'FinBERT':
             assign_finBERT_scores(new_dict, cur_symbol_0)
-            print('finBERT Date" 2023-05-30: ----- ', new_dict[datetime.date(2023, 5, 30)]['news'])
+            print('finBERT Date" 2023-03-10: ----- ', new_dict[datetime.date(2023, 3, 10)]['news'])
         else: 
             assign_vader_scores(new_dict, cur_symbol_0)   
-            print('vader Date" 2023-05-30: ----- ', new_dict[datetime.date(2023, 5, 30)]['news'])
+            print('vader Date" 2023-03-10: ----- ', new_dict[datetime.date(2023, 3, 10)]['news'])
     
-        out_dir = "./data/06_input/subset_symbols_"+ cur_symbol_0 + ".pkl"
+        out_dir = os.path.join(output_dir, 'subset_symbols_'+ cur_symbol_0 + ".pkl")
+    
         with open(out_dir, "wb") as f:
             pickle.dump(new_dict, f)
         print('*************---------------************')
     
     
-cur_symbol_lst = ['BAC', 'DIS', 'GM', 'MRNA', 'NVDA', 'PFE']
-input_dir = "./data/05_env_data/env_data.pkl"
+cur_symbol_lst = ['TSLA']
+base_dir = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/"
+tokenizer_dir = os.path.join(base_dir, 'tokenizer')
+input_dir = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/env_data.pkl"
+output_dir = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/output/"
+# Load the tokenizer and model
+print(os.path.join(tokenizer_dir, 'finbert-tone'))
+tokenizer = BertTokenizer.from_pretrained(os.path.join(tokenizer_dir, 'finbert-tone'))
+model = BertForSequenceClassification.from_pretrained(os.path.join(tokenizer_dir, 'finbert-tone'))
 #### option = 'FinBERT' or 'Vader'
-export_sub_symbol(cur_symbol_lst, senti_model_type = 'FinBERT')
+export_sub_symbol(cur_symbol_lst, senti_model_type = 'FinBERT', output_dir = output_dir)
