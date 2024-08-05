@@ -1,12 +1,12 @@
 [chat]
-model = "gpt-3.5-turbo-0125"
+model = "gpt-3.5-turbo"
 end_point = "https://api.openai.com/v1/chat/completions"
 system_message = "You are a helpful assistant."
 
 
 [general]
 top_k = 3
-agent_name = "agent_1"
+agent_name = "agent_tsla"
 look_back_window_size = 7
 trading_symbol = "TSLA"
 character_string = '''
@@ -19,7 +19,6 @@ You accumuate a lot of informaion of the following sectors so you are especially
 (6) Information Technology.
 
 You are an expert of TSLA.
-From year 2021 to 2022 September, Tesla's continued growth and solid financial performance over the defined period, despite certain quarters where revenue missed Wall Street expectations.
 '''
 
 
