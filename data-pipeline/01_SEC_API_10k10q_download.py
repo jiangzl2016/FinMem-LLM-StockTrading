@@ -1,3 +1,4 @@
+# API doc: https://sec-api.io/docs/query-api
 # !pip install clean-text
 
 # parameters
@@ -255,7 +256,8 @@ def request_content(filings: List[str], sections: List[str]) -> List[str]:
 
 if __name__ == "__main__":
     # load data
-    unique_equities = ['''Enter the tickers you want to download here as a list of str''']
+    # Enter the tickers you want to download here as a list of str
+    unique_equities = ["TSLA"]
 
     # get file index
     ten_k_index_table = get_index(unique_equities, "10-K")
