@@ -2,6 +2,7 @@
 # !pip install unidecode
 # !pip install Levenshtein
 
+import os
 import re
 import pandas as pd
 import yfinance as yf
@@ -218,6 +219,9 @@ def adjust_trading_days(start_day, end_day, ticker, df):
         # While the day is not a trading day, add one day
         while day not in yf_date:
             day += timedelta(days=1)
+            # If day exceeds the maximum date in yf_date, break the loop
+            if day > max(yf_date):
+                break
         # Append the adjusted trading day to the list
         trading.append(day)
 
@@ -253,6 +257,13 @@ def main(df, ticker, save_path, start_day, end_day):
     
     # Dropping duplicates and further cleaning
     df_drop_update = df_sorted.drop_duplicates(subset=['new_headline'], keep='first')
+    # TODO: columns have different names between Alpaca news and Refinitiv news
+    if 'dates' not in list(df_drop_update.columns):
+        df_drop_update['dates'] = df_drop_update['datetime']
+    if 'body' not in list(df_drop_update.columns):
+        df_drop_update['body'] = df_drop_update['content']
+    if 'symbols' not in list(df_drop_update.columns):
+        df_drop_update['symbols'] = df_drop_update['equity']
     df_drop_update = df_drop_update.sort_values(by='dates', ascending=False)
     df_drop_reuters = clean_news(df_drop_update)
     df_remove_spaces = remove_spaces(df_drop_reuters, ['new_headline', 'body'])
@@ -264,8 +275,8 @@ def main(df, ticker, save_path, start_day, end_day):
 
     # Resetting symbols and timestamps, and cleaning text
     replace_column_values(df_final, 'symbols', ticker)
-    df_final['dates'] = df_final['dates'].str[:19]
-    df_final['dates'] = pd.to_datetime(df_final['dates'])
+    # df_final['dates'] = df_final['dates'].str[:19]
+    # df_final['dates'] = pd.to_datetime(df_final['dates'])
     df_final['date'] = df_final['dates'].apply(calculate_date)
     df_final['cleaned_body'] = df_final['body'].apply(clean_text)
 
@@ -273,7 +284,7 @@ def main(df, ticker, save_path, start_day, end_day):
     df_final = df_final.drop_duplicates(subset=['cleaned_body'], keep='first')
 
     # Dropping temporary columns
-    df_final = df_final.drop(columns=['item_id', 'update_number', 'headline', 'temp_body', 'temp_new_headline', 'body', 'dates'])
+    df_final = df_final.drop(columns=['update_number', 'headline', 'temp_body', 'temp_new_headline', 'body', 'dates']) # 'item_id', 
 
     # Save and read CSV for dropping similar records
     # If you employ the drop_similar_records function as shown below:
@@ -302,10 +313,17 @@ def main(df, ticker, save_path, start_day, end_day):
     # print(df_drop_similar.head(10))
 
 if __name__ == "__main__":
-    ticker = 'PFE'
-    df = pd.read_csv('PFE2021-08-01-2023-05-30.csv')
-    save_path = 'cleaned_PFE2021-08-01-2023-05-30.csv'
-    main(df, ticker, save_path)
+    # ticker = 'PFE'
+    # df = pd.read_csv('PFE2021-08-01-2023-05-30.csv')
+    # save_path = 'cleaned_PFE2021-08-01-2023-05-30.csv'
+    ticker = 'TSLA'
+    project_path = "/Users/zhonglingjiang/FinMem-LLM-StockTrading"
+    input_path = os.path.join(project_path, "data/03_primary/news.parquet")
+    print(input_path)
+    save_path = os.path.join(project_path, f"data-pipeline/experiment/input/cleaned_{ticker}.csv")
+    df = pd.read_parquet(input_path)
+
+    main(df, ticker, save_path, start_day='2021-08-17', end_day='2023-04-10')
 
 # PFE,JPM,XOM,GS,C,MRNA,CVX,GM,F,MS,BAC,JNJ,WMT,NVDA,DIS,MRK
 
