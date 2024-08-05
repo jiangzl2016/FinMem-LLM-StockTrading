@@ -95,7 +95,7 @@ def sim_func(
     if run_mode_var == RunMode.Train:
         the_agent = LLMAgent.from_config(config)
     else:
-        the_agent = LLMAgent.load_checkpoint(path=os.path.join(trained_agent_path, "agent_1"))  # type: ignore
+        the_agent = LLMAgent.load_checkpoint(path=trained_agent_path)  # type: ignore
     # start simulation
     pbar = tqdm(total=environment.simulation_length)
     while True:
@@ -106,6 +106,8 @@ def sim_func(
         logger.info(f"Record {market_info[-2]}")
         if market_info[-1]:  # if done break
             break
+        if len(market_info[4]) == 0: # if no news data, continue
+            continue
         the_agent.step(market_info=market_info, run_mode=run_mode_var)  # type: ignore
         pbar.update(1)
         # save checkpoint every time, openai api is not stable
@@ -172,7 +174,7 @@ def sim_checkpoint(
     environment = MarketEnvironment.load_checkpoint(
         path=os.path.join(checkpoint_path, "env")
     )
-    the_agent = LLMAgent.load_checkpoint(path=os.path.join(checkpoint_path, "agent_1"))
+    the_agent = LLMAgent.load_checkpoint(path=checkpoint_path)
     pbar = tqdm(total=environment.simulation_length)
     # run simulation
     while True:
