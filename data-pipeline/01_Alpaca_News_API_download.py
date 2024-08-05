@@ -1,6 +1,6 @@
 # Arguments
-END_POINT_TEMPLATE = "https://data.alpaca.markets/v1beta1/news?start={start_date}&end={end_date}&limit=50&symbols={symbol}"
-END_POINT_TEMPLATE_LINK_PAGE = "https://data.alpaca.markets/v1beta1/news?limit=50&symbol={symbol}&page_token={page_token}"
+END_POINT_URL = "https://data.alpaca.markets/v1beta1/news"
+# END_POINT_TEMPLATE_LINK_PAGE = "https://data.alpaca.markets/v1beta1/news?limit=50&symbol={symbol}&page_token={page_token}"
 NUM_NEWS_PER_RECORD = 200
 MAX_ATTEMPTS = 5
 WAIT_TIME = 60
@@ -80,7 +80,7 @@ class ParseRecordContainer:
                 "datetime": self.date_list,
                 "source": self.source_list,
                 "summary": self.summary_list,
-                "title": self.title_list,
+                "headline": self.title_list,
                 "url": self.url_list,
             }
         )
@@ -103,17 +103,21 @@ def query_one_record(args: Tuple[date, str]) -> None:
         "Apca-Api-Key-Id": os.environ.get("ALPACA_KEY"),
         "Apca-Api-Secret-Key": os.environ.get("ALPACA_KEY_SECRET_KEY"),
     }
+    params = {
+        "symbols": symbol,
+        "start": date.strftime("%Y-%m-%d"),
+        "end": next_date.strftime("%Y-%m-%d"),
+        "limit": 50,
+        "include_content": True
+    }
     container = ParseRecordContainer(symbol)
 
     with httpx.Client() as client:
         # first request
         response = client.get(
-            END_POINT_TEMPLATE.format(
-                start_date=date.strftime("%Y-%m-%d"),
-                end_date=next_date.strftime("%Y-%m-%d"),
-                symbol=symbol,
-            ),
+            END_POINT_URL,
             headers=request_header,
+            params=params
         )
         if response.status_code != 200:
             print("[red]Hit limit[/red]")
@@ -124,11 +128,16 @@ def query_one_record(args: Tuple[date, str]) -> None:
 
         while next_page_token:
             try:
+                params_next_token = {
+                    "symbols": symbol,
+                    "limit": 50,
+                    "include_content": True,
+                    "page_token": next_page_token
+                }
                 response = client.get(
-                    END_POINT_TEMPLATE_LINK_PAGE.format(
-                        symbol=symbol, page_token=next_page_token
-                    ),
+                    END_POINT_URL,
                     headers=request_header,
+                    params=params_next_token
                 )
                 if response.status_code != 200:
                     raise ScraperError(response.text)
