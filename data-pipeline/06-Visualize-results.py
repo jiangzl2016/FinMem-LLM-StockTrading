@@ -105,7 +105,7 @@ def plot_cumulative_returns(dates, return_lists, labels, colors, linestyles, alp
 
     # Apply tight layout to ensure everything fits without overlapping
     plt.tight_layout()
-
+    plt.savefig(file_path)
     # Save the plot as a .png file with 300 dpi
     # plt.savefig(file_path, format='png', dpi=300)
 
@@ -177,12 +177,12 @@ if __name__ == '__main__':
     file_path = {Model_name: path of model output actions}
     """
     file_paths = {
-        'FinMem': '/Users/yuechenjiang/Desktop/CatMemo/result/Tsla-new-full.csv',
-        'GA': '/Users/yuechenjiang/Desktop/CatMemo/result/action_df_tsla_park_v2.csv',
-        'FinGPT': '/Users/yuechenjiang/Desktop/CatMemo/BenchMark/fingpt/tsla.csv',
-        'PPO': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_PPO.csv',
-        'A2C': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_A2C.csv',
-        'DQN': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_DQN.csv'
+        'FinMem': '/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/actions/tsla_gpt3.5.csv',
+        # 'GA': '/Users/yuechenjiang/Desktop/CatMemo/result/action_df_tsla_park_v2.csv',
+        # 'FinGPT': '/Users/yuechenjiang/Desktop/CatMemo/BenchMark/fingpt/tsla.csv',
+        # 'PPO': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_PPO.csv',
+        # 'A2C': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_A2C.csv',
+        # 'DQN': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_DQN.csv'
     }
 
     # Loading DataFrames from the file paths
@@ -191,9 +191,9 @@ if __name__ == '__main__':
     # Additional configurations for the main function call
     Ticker = 'TSLA'
     start_time = '2022-10-06'
-    end_time = '2023-04-10'
+    end_time = '2023-04-06'
     col = ['date','direction']
-    image_save_path = '/Users/yuechenjiang/Desktop/CatMemo/Final_result/Park_test/TSLA2022-10-10-2023-04-10.png'
+    image_save_path = f'/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/plots/TSLA{start_time}-{end_time}.png'
     Start_Date = False
 
     # Main function call
