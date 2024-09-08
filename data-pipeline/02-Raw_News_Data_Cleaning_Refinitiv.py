@@ -49,7 +49,7 @@ def clean_news(df):
         pd.DataFrame: The cleaned DataFrame.
     """
     for index, row in df.iterrows():
-        if '(Reuters)' in row['body']:
+        if row['body'] is not None and '(Reuters)' in row['body']:
             position = row['body'].find('(Reuters)')
             df.at[index, 'body'] = row['body'][position:]
     return df
@@ -313,42 +313,33 @@ def main(df, ticker, save_path, start_day, end_day):
     # print(df_drop_similar.head(10))
 
 if __name__ == "__main__":
-    # ticker = 'PFE'
-    # df = pd.read_csv('PFE2021-08-01-2023-05-30.csv')
-    # save_path = 'cleaned_PFE2021-08-01-2023-05-30.csv'
-    ticker = 'TSLA'
-    project_path = "/Users/zhonglingjiang/FinMem-LLM-StockTrading"
+    # Add argument parser for ticker, project_path, save_path, start_day, end_day:
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--ticker", help="The stock ticker symbol for matching trading days.")
+    parser.add_argument("-p", "--project_path", help="The project path.")
+    parser.add_argument("-sd", "--start_day", help="The start date for the trading day range in 'YYYY-MM-DD' format.")
+    parser.add_argument("-ed", "--end_day", help="The end date for the trading day range in 'YYYY-MM-DD' format.")
+
+    args = parser.parse_args()
+    ticker = args.ticker
+    project_path = args.project_path
+
+    # Load Alpaca news data
     input_path = os.path.join(project_path, "data/03_primary/news.parquet")
-    print(input_path)
-    save_path = os.path.join(project_path, f"data-pipeline/experiment/input/cleaned_{ticker}.csv")
+    save_path = os.path.join(project_path, f"input/cleaned_{ticker}.csv")
     df = pd.read_parquet(input_path)
+    print(f"Loaded {len(df)} Alpaca news records for {ticker}.")
 
-    main(df, ticker, save_path, start_day='2021-08-17', end_day='2023-04-10')
+    # Load polygon news data
+    input_path = os.path.join(project_path, "data/03_primary/polygon_news.parquet")
+    polygon_df = pd.read_parquet(input_path)
+    polygon_df['datetime'] = pd.to_datetime(polygon_df['datetime'])
+    polygon_df['datetime'] = polygon_df['datetime'].apply(lambda t: t.tz_convert(None))
+    print(f"Loaded {len(polygon_df)} Polygon news records for {ticker}.")
 
-# PFE,JPM,XOM,GS,C,MRNA,CVX,GM,F,MS,BAC,JNJ,WMT,NVDA,DIS,MRK
+    # TODO: Concatenate Alpaca and Polygon news data
+    df = pd.concat([df, polygon_df])
+    
 
-# TSLA: 6209
-# AAPL: 4274
-# AMZN: 4038
-# PFE: 3762
-# GOOG: 3600
-# JPM: 3094
-# XOM: 2895
-# MSFT: 2883
-# GS: 2786
-# C: 2716
-# MRNA: 2310
-# CVX: 2110
-# GM: 1927
-# F: 1828
-# BABA: 1717
-# MS: 1666
-# NFLX: 1655
-# BAC: 1644
-# JNJ: 1586
-# WMT: 1540
-# NVDA: 1295
-# DIS: 1219
-# MRK: 1131
-# COIN: 896
-# NIO: 484 
+    main(df, ticker, save_path, start_day=args.start_day, end_day=args.end_day)
