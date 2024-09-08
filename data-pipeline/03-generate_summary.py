@@ -8,22 +8,6 @@ import concurrent.futures
 import threading
 from dotenv import dotenv_values
 
-config = dotenv_values(".env")
-model = \
-Model_Factory.create_model('chatgpt',
-                           key=config['OPENAI_API_KEY'],
-                           model_name="gpt-3.5-turbo")
-summary = model.summarize
-summary_10k_10q = model.summarize_10k_10q
-print(model)
-
-# SOURCE_PATH = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/Fake-Sample-Data/example_input/Fake-News-Data-for-Each-Stock"
-SOURCE_PATH = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/input"
-DEST_PATH = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/output"
-TEMP_PATH = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/temp_output"
-# file_ls = ['AMZN_fake.csv', 'MSFT_fake.csv', 'NFLX_fake.csv','TSLA_fake.csv']
-file_ls = ['cleaned_TSLA.csv', 'filing_data.parquet'] # 'cleaned_AMZN.csv',
-# file_ls = ['filing_data.parquet']
 
 def process_row(row, lock, df, df_name, column, content_type):
     # Perform summary on the 'body' column for news and 'content' column for 10k10q
@@ -77,5 +61,33 @@ def process_main(file):
     else:
         print(f"Invalid file format: {file}")
 
-for file in file_ls:
-    process_main(file)
+if __name__ == '__main__':
+    import argparse
+    argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument("-s", "--source_path", help="The source path of the input data.")
+    argument_parser.add_argument("-d", "--dest_path", help="The destination path of the output data.")
+    argument_parser.add_argument("-t", "--temp_path", help="The temporary path for intermediate data.")
+    argument_parser.add_argument("-k", "--ticker", help="The stock ticker symbol")
+    argument_parser.add_argument("-v", "--gpt_model_version", help="The version of the GPT model to use.")
+
+    args = argument_parser.parse_args()
+    SOURCE_PATH, DEST_PATH, TEMP_PATH = args.source_path, args.dest_path, args.temp_path
+    file_ls = [f'cleaned_{args.ticker}.csv', 'filing_data.parquet'] 
+    
+    config = dotenv_values(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 
+                           ".env.copy"))
+    # Use gpt 3.5 turbo to summarize news
+    model1 = \
+    Model_Factory.create_model('chatgpt',
+                            key=config['OPENAI_API_KEY'],
+                            model_name=args.gpt_model_version)
+    # Use gpt 4o to summarize 10k/ 10q
+    model2 = \
+    Model_Factory.create_model('chatgpt',
+                            key=config['OPENAI_API_KEY'],
+                            model_name='gpt-4o')
+    summary = model1.summarize
+    summary_10k_10q = model2.summarize_10k_10q
+    
+    for file in file_ls:
+        process_main(file)

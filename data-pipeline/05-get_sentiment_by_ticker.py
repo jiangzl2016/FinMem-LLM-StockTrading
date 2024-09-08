@@ -13,13 +13,6 @@ def subset_symbol_dict(input_dir, cur_symbol):
     with open(input_dir, "rb") as f:
         data = pickle.load(f)
     # Now combined_dict contains all the data from the tuple
-    # print(data.keys())
-    # print(len(data[datetime.date(2023, 5, 17)]))
-    # print(data[datetime.date(2023, 5, 17)][0])
-    # print(data[datetime.date(2022, 8, 11)][1]['news']['NVDA'])
-    # # print(data[datetime.date(2023, 5, 17)][2])
-    # # print(data[datetime.date(2023, 5, 17)][3])
-    # print(data[datetime.date(2023, 5, 17)][0]['price'].keys())
     new_dict = {}
     ticker_dict_byDate = {}
     for k, v in tqdm(data.items()):
@@ -126,17 +119,17 @@ def assign_vader_scores(new_dict, cur_symbol):
 
 
 
-def export_sub_symbol(cur_symbol_lst, senti_model_type, output_dir):
+def export_sub_symbol(input_dir, cur_symbol_lst, senti_model_type, output_dir):
     print('Ticker list: ------', cur_symbol_lst)
     for cur_symbol_0 in cur_symbol_lst:
         new_dict, ticker_dict_byDate = subset_symbol_dict(input_dir, cur_symbol_0)
         
         if senti_model_type == 'FinBERT':
             assign_finBERT_scores(new_dict, cur_symbol_0)
-            print('finBERT Date" 2023-03-10: ----- ', new_dict[datetime.date(2023, 3, 10)]['news'])
+            # print('finBERT Date" 2023-03-10: ----- ', new_dict[datetime.date(2023, 3, 10)]['news'])
         else: 
             assign_vader_scores(new_dict, cur_symbol_0)   
-            print('vader Date" 2023-03-10: ----- ', new_dict[datetime.date(2023, 3, 10)]['news'])
+            # print('vader Date" 2023-03-10: ----- ', new_dict[datetime.date(2023, 3, 10)]['news'])
     
         out_dir = os.path.join(output_dir, 'subset_symbols_'+ cur_symbol_0 + ".pkl")
     
@@ -144,15 +137,22 @@ def export_sub_symbol(cur_symbol_lst, senti_model_type, output_dir):
             pickle.dump(new_dict, f)
         print('*************---------------************')
     
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--ticker", help="The stock ticker symbol.")
+    parser.add_argument("-p", "--tokenizer_dir", help="The tokenizer directory.")
+    parser.add_argument("-i", "--input_dir", help="input directory")
+    parser.add_argument("-o", "--output_dir", help="output directory")
+    args = parser.parse_args()
     
-cur_symbol_lst = ['TSLA']
-base_dir = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/"
-tokenizer_dir = os.path.join(base_dir, 'tokenizer')
-input_dir = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/env_data.pkl"
-output_dir = "/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/output/"
-# Load the tokenizer and model
-print(os.path.join(tokenizer_dir, 'finbert-tone'))
-tokenizer = BertTokenizer.from_pretrained(os.path.join(tokenizer_dir, 'finbert-tone'))
-model = BertForSequenceClassification.from_pretrained(os.path.join(tokenizer_dir, 'finbert-tone'))
-#### option = 'FinBERT' or 'Vader'
-export_sub_symbol(cur_symbol_lst, senti_model_type = 'FinBERT', output_dir = output_dir)
+    cur_symbol_lst = [args.ticker]
+    tokenizer_dir = args.tokenizer_dir  
+    input_dir = os.path.join(args.input_dir, "env_data.pkl")
+    output_dir = args.output_dir
+
+    # Load the tokenizer and model
+    tokenizer = BertTokenizer.from_pretrained(os.path.join(tokenizer_dir, 'finbert-tone'))
+    model = BertForSequenceClassification.from_pretrained(os.path.join(tokenizer_dir, 'finbert-tone'))
+    #### option = 'FinBERT' or 'Vader'
+    export_sub_symbol(input_dir, cur_symbol_lst, senti_model_type = 'FinBERT', output_dir = output_dir)

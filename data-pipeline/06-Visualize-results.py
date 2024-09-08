@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -172,12 +173,23 @@ def main(Ticker, start_time, end_time, df_dict, col, image_save_path, Start_Date
     )
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--ticker", help="The stock ticker symbol.")
+    parser.add_argument("-i", "--action_dir", help="action directory")
+    parser.add_argument("-o", "--image_output_dir", help="image output directory")
+    parser.add_argument("-sd", "--start_date", help="Start date for the data range in 'YYYY-MM-DD' format.")
+    parser.add_argument("-ed", "--end_date", help="End date for the data range in 'YYYY-MM-DD' format.")
+
+    args = parser.parse_args()
+
     # Dictionary containing file paths
     """
     file_path = {Model_name: path of model output actions}
     """
     file_paths = {
-        'FinMem': '/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/actions/tsla_gpt3.5.csv',
+        'FinMem': args.action_dir,
+        # 'FinMem': '/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/actions/tsla_gpt3.5.csv',
         # 'GA': '/Users/yuechenjiang/Desktop/CatMemo/result/action_df_tsla_park_v2.csv',
         # 'FinGPT': '/Users/yuechenjiang/Desktop/CatMemo/BenchMark/fingpt/tsla.csv',
         # 'PPO': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_PPO.csv',
@@ -189,11 +201,13 @@ if __name__ == '__main__':
     df_dict = {key: pd.read_csv(path) for key, path in file_paths.items()}
 
     # Additional configurations for the main function call
-    Ticker = 'TSLA'
-    start_time = '2022-10-06'
-    end_time = '2023-04-06'
+    Ticker = args.ticker
+    # start_time = '2022-10-06'
+    # end_time = '2023-04-06'
+    start_time = args.start_date
+    end_time = args.end_date
     col = ['date','direction']
-    image_save_path = f'/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/plots/TSLA{start_time}-{end_time}.png'
+    image_save_path = os.path.join(args.image_output_dir, f'{Ticker}_{start_time}-{end_time}.png')
     Start_Date = False
 
     # Main function call

@@ -195,17 +195,20 @@ def main(ticker, start, end, df_paths, col_names, save_path):
 
 
 if __name__ == '__main__':
-    ticker = 'TSLA'
-    start_time = '2022-10-06'
-    end_time = '2023-04-06'
+    import argparse
+    argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument("-t", "--ticker", help="The stock ticker symbol")
+    argument_parser.add_argument("-a", "--action_df_path", help="The predicted action dataframe path.")
+    argument_parser.add_argument("-sd", "--start_day", help="The start date for the trading day range in 'YYYY-MM-DD' format.")
+    argument_parser.add_argument("-ed", "--end_day", help="The end date for the trading day range in 'YYYY-MM-DD' format.")
+    argument_parser.add_argument("-s", "--save_path", help="The path to save the results CSV file.")
+    args = argument_parser.parse_args()
+    ticker = args.ticker #'TSLA'
+    start_time = args.start_day #'2022-10-06'
+    end_time = args.end_day #'2023-04-06'
     
     df_paths = {
-        'FinMe': '/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/actions/tsla_gpt3.5.csv',
-        # 'Park': '/Users/yuechenjiang/Desktop/CatMemo/result/action_df_tsla_park_v2.csv',
-        # 'FinGPT': '/Users/yuechenjiang/Desktop/CatMemo/BenchMark/fingpt/tsla_curie.csv',
-        # 'A2C': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_A2C_summary_data_seed2_full.csv',
-        # 'PPO': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_PPO_summary_data_seed1_full.csv',
-        # 'DQN': '/Users/yuechenjiang/Desktop/CatMemo/result/TSLA_DQN_summary_data_seed1_full.csv'
+        'FinMe': args.action_df_path #'FinMem-LLM-StockTrading/data-pipeline/runs/run_TSLA_082124/actions/tsla_gpt-4o.csv'
     }
 
     col_names = {
@@ -217,6 +220,6 @@ if __name__ == '__main__':
         # 'DQN': ['date', 'action']
     }
 
-    save_path = f'/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/plots/TSLA{start_time}-{end_time}.csv'
+    save_path = args.save_path # f"FinMem-LLM-StockTrading/data-pipeline/runs/run_TSLA_082124/plots/TSLA{start_time}-{end_time}.csv'
     
     main(ticker, start_time, end_time, df_paths, col_names, save_path)

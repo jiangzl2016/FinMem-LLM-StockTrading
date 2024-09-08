@@ -77,8 +77,6 @@ EIGHT_K_ITEM_CODE = [
 ]
 
 SIZE = 50
-START_DATE = "2021-08-15"
-END_DATE = "2023-04-25"
 SLEEP_TIME = 10
 
 # dependencies
@@ -98,7 +96,7 @@ from httpx import RequestError
 from datetime import datetime
 from dateutil import parser
 from typing import List
-
+import pandas as pd
 
 # set up logger
 logger = logging.getLogger(__name__)
@@ -257,8 +255,15 @@ def request_content(filings: List[str], sections: List[str]) -> List[str]:
 if __name__ == "__main__":
     # load data
     # Enter the tickers you want to download here as a list of str
-    unique_equities = ["TSLA"]
-
+    import argparse
+    argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument("-t", "--ticker", help="The stock ticker symbol.")
+    argument_parser.add_argument("-sd", "--start_day", help="The start date for the trading day range in 'YYYY-MM-DD' format.")
+    argument_parser.add_argument("-ed", "--end_day", help="The end date for the trading day range in 'YYYY-MM-DD' format.")
+    argument_parser.add_argument("-o", "--output_path", help="The output path for the data.")
+    
+    args = argument_parser.parse_args()
+    unique_equities = [args.ticker]
     # get file index
     ten_k_index_table = get_index(unique_equities, "10-K")
     ten_q_index_table = get_index(unique_equities, "10-Q")
@@ -318,5 +323,11 @@ if __name__ == "__main__":
 
     # filing_data = pl.concat([ten_k_df, ten_q_df, eight_k_df])
     filing_data = pl.concat([ten_k_df, ten_q_df])
-    filing_data.write_parquet(os.path.join("data", "03_primary", "filing_data.parquet"))
+    
+    # Only keep reports with in specific time range
+    filing_data = filing_data.filter(
+        pl.col("est_timestamp").is_between(pd.to_datetime(args.start_day), pd.to_datetime(args.end_day))
+    )
+    print(filing_data.shape)
+    filing_data.write_parquet(args.output_path) # os.path.join("input", "filing_data.parquet")
     logger.info("Program ends")

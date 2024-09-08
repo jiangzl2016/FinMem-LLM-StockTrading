@@ -111,14 +111,22 @@ def process_filing_data(start_day: str, end_day: str, kq_path: str, filing_data:
     return nested_10q,nested_10k
     
 if __name__ == '__main__':
-    base_path = '/Users/zhonglingjiang/FinMem-LLM-StockTrading/data-pipeline/experiment/'
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--ticker", help="The stock ticker symbol for matching trading days.")
+    parser.add_argument("-p", "--base_path", help="The project path.")
+    parser.add_argument("-sd", "--start_day", help="The start date for the trading day range in 'YYYY-MM-DD' format.")
+    parser.add_argument("-ed", "--end_day", help="The end date for the trading day range in 'YYYY-MM-DD' format.")
+    args = parser.parse_args()    
+
+    base_path = args.base_path
     price_path = os.path.join(base_path, 'output/')
     news_path = os.path.join(base_path, 'output/')
     kq_path = os.path.join(base_path, 'output/')
     filing_data = os.path.join(base_path, 'output/filing_data.parquet')
-    start_day = '2021-08-17'
-    end_day = '2023-04-10'
-    tickers = ['TSLA']
+    start_day = args.start_day
+    end_day = args.end_day
+    tickers = [args.ticker]
     csv_files_pattern = '*.csv'
     col_name = 'summary'
 
